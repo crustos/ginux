@@ -249,7 +249,9 @@ def patched_source(path):
     if os.path.islink(dest):
         os.unlink(dest)
     with open(dest, "w", encoding="utf-8") as f:
-        f.write(head + " " + text)
+        # On a line of its own: a `use` sharing the first line is not at a
+        # line start, and Crust would never see it.
+        f.write(head + "\n" + text)
     return dest
 
 
@@ -261,6 +263,10 @@ def _classify(path):
     src = patched_source(path)
     r = crustos.classify(src)
     err = r.error.replace(src, path) if r.error else r.error
+    if err and src != path:
+        # The patched copy has one extra line at the top.
+        err = re.sub(r"line (\d+)",
+                     lambda m: "line %d" % max(int(m.group(1)) - 1, 1), err)
     return {"path": os.path.relpath(path, HERE), "outcome": r.outcome,
             "items": r.items, "lines": r.lines, "covered": r.covered,
             "error": err, "patched": src != path}
