@@ -4,26 +4,27 @@
 
 - Active skill: `.agents/skills/hdae-development/SKILL.md`
 - Reload required after compaction, reset, resume, or handoff: yes
-- Active project: issue #62 synchronous poll budget
-- Branch: `hdae/issue-62-poll-budget`
+- Active project: remaining reporter remediation batch
+- Branch: `hdae/issue-25-mprotect-shootdown`
 - Baseline tag: `research-v1-baseline`
-- Active gate: Gate 40, synchronous poll budget
-- Last completed action: `make check` and `make test` passed and Gate 40 was
-  delivered through PR #70
-- Next action: begin Gate 41 for issue #63 while PR #70 awaits GitHub checks and
-  a subsequent unchanged-head review
+- Active gate: Gate 40 mprotect SMP shootdown, delivered as PR #49 for issue #25
+- Last completed action: merged current `main` into PR #49 and resolved the
+  durable HDAE checkpoint conflict
+- Next action: run fresh `make check` and `make test`, then push the new exact
+  head for GitHub CI and a later unchanged-head review
 
 ## Current repository state
 
-Remote `main` is at `82df3d71` after merged PR #46. The first
+Remote `main` is at `5dd58ca4`. The first
 eleven feedback-hardening gates and inserted correctness gates are complete.
 Gate 12 is complete on `codex/performance-parity`. Gates 13 through 19 and 21
 through 23 and Gates 32 through 33 remain in `gates-todo/` for maintainer
 review after delivery through merged pull requests. Gate 34 was delivered
 through merged PR #44 and issue #17 is closed; Gate 35 was delivered through
 merged PR #45 and issue #18 is closed; Gate 36 was delivered through merged PR
-#46 and issue #19 is closed. Gate 37 is active for the confirmed issue #57
-regression.
+#46 and issue #19 is closed. Gate 37 was delivered through merged PR #59 and
+issue #57 is closed. PR #49 is being synchronized for fresh validation; PRs
+#50 through #54 remain open and conflicted pending the same merge-train process.
 The ordinary QEMU path defaults to two vCPUs; the complete one/two/four-vCPU
 matrix and repeated stress pass. Gate 11's comparison and reduced evidence are
 under `docs/feedback-hardening/`. No direct push to `main` was performed.
