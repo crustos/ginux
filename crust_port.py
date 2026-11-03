@@ -195,6 +195,42 @@ def external_consts(path, text):
     return out
 
 
+_SKIP_DIRS = {"target", "build", ".git", "node_modules"}
+_MIRRORED = set()
+
+
+def _mirror_siblings(path):
+    """Symlink the rest of `path`'s crate next to its patched copy.
+
+    Crust resolves `use crate::x::Y` and `mod x;` by reading neighbouring
+    files, so a patched copy standing alone in build/crust/patched/ could not
+    see any of them and every cross-file type looked undefined.  Directories
+    are created for real and only *files* are linked, so writing a patched
+    copy can never write through into the tree.
+    """
+    rel = os.path.relpath(path, HERE).split(os.sep)
+    src_top = os.path.join(HERE, rel[0])
+    if len(rel) > 1 and rel[0] in ("crates", "services", "tools") and len(rel) > 2:
+        src_top = os.path.join(HERE, rel[0], rel[1])
+    if src_top in _MIRRORED:
+        return
+    _MIRRORED.add(src_top)
+    for root, dirs, files in os.walk(src_top):
+        dirs[:] = [d for d in dirs if d not in _SKIP_DIRS]
+        out = os.path.join(PATCHED, os.path.relpath(root, HERE))
+        os.makedirs(out, exist_ok=True)
+        for name in files:
+            if not name.endswith((".rs", ".toml")):
+                continue
+            link = os.path.join(out, name)
+            if os.path.lexists(link):
+                continue
+            try:
+                os.symlink(os.path.join(root, name), link)
+            except OSError:
+                pass
+
+
 def patched_source(path):
     """Path to feed Crust for `path`: a patched copy if it needs one."""
     if not CONSTS:
@@ -209,6 +245,9 @@ def patched_source(path):
     head = " ".join("const %s: %s = %d;" % (f, t, v) for f, t, v in extra)
     dest = os.path.join(PATCHED, os.path.relpath(path, HERE))
     os.makedirs(os.path.dirname(dest), exist_ok=True)
+    _mirror_siblings(path)
+    if os.path.islink(dest):
+        os.unlink(dest)
     with open(dest, "w", encoding="utf-8") as f:
         f.write(head + " " + text)
     return dest
